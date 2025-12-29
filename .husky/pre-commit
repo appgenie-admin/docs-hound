@@ -1,2 +1,8 @@
-pnpm lint-staged
+#!/usr/bin/env sh
 
+# Run typecheck, lint, format, and tests
+pnpm typecheck && \
+pnpm lint && \
+pnpm format:check && \
+pnpm test && \
+pnpm lint-staged

@@ -20,9 +20,11 @@ export function IndexedPagesList({ urls }: IndexedPagesListProps) {
   const [search, setSearch] = useState('')
 
   const filteredUrls = useMemo(() => {
-    if (!search) return urls
+    // Sort URLs alphabetically (LATCH: Alphabet)
+    const sortedUrls = [...urls].sort((a, b) => a.localeCompare(b))
+    if (!search) return sortedUrls
     const searchLower = search.toLowerCase()
-    return urls.filter((url) => url.toLowerCase().includes(searchLower))
+    return sortedUrls.filter((url) => url.toLowerCase().includes(searchLower))
   }, [urls, search])
 
   if (urls.length === 0) {

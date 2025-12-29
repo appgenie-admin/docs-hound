@@ -19,7 +19,6 @@ import {
   IconAlertCircle,
   IconSearch,
 } from '@tabler/icons-react'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getSiteRegistry, type Site } from '@docs-hound/shared-db'
 import { DiscoveredUrlsList } from '@/components/DiscoveredUrlsList'
@@ -100,14 +99,18 @@ export default async function SiteDetailPage({ params }: PageProps) {
     <Container size="xl" py="xl">
       {/* Poll for status updates when processing */}
       {isProcessing && <SiteStatusPoller />}
-
-      <Anchor component={Link} href="/" c="dimmed" size="sm" mb="md">
+      <Anchor
+        href="/"
+        c="dimmed"
+        size="sm"
+        mb="md"
+        style={{ textDecoration: 'none' }}
+      >
         <Group gap={4}>
           <IconArrowLeft size={14} />
           Back to Dashboard
         </Group>
       </Anchor>
-
       <Group justify="space-between" mb="xl">
         <div>
           <Group gap="md" mb="xs">
@@ -124,7 +127,6 @@ export default async function SiteDetailPage({ params }: PageProps) {
           )}
         </div>
       </Group>
-
       {/* Error State */}
       {site.status === 'error' && site.errorMessage && (
         <Alert
@@ -136,7 +138,6 @@ export default async function SiteDetailPage({ params }: PageProps) {
           {site.errorMessage}
         </Alert>
       )}
-
       {/* Pending State */}
       {site.status === 'pending' && (
         <Card withBorder padding="xl" radius="md">
@@ -158,7 +159,6 @@ export default async function SiteDetailPage({ params }: PageProps) {
           </Stack>
         </Card>
       )}
-
       {/* Discovering State */}
       {site.status === 'discovering' && (
         <Card withBorder padding="xl" radius="md">
@@ -179,7 +179,6 @@ export default async function SiteDetailPage({ params }: PageProps) {
           </Stack>
         </Card>
       )}
-
       {/* Discovered State - URL Review */}
       {site.status === 'discovered' && (
         <Paper withBorder p="xl" radius="md">
@@ -199,7 +198,6 @@ export default async function SiteDetailPage({ params }: PageProps) {
           <DiscoveredUrlsList domain={site.domain} urls={discoveredUrls} />
         </Paper>
       )}
-
       {/* Indexing State */}
       {site.status === 'indexing' && (
         <Card withBorder padding="xl" radius="md">
@@ -220,7 +218,6 @@ export default async function SiteDetailPage({ params }: PageProps) {
           </Stack>
         </Card>
       )}
-
       {/* Indexed State */}
       {site.status === 'indexed' && (
         <Stack gap="lg">
@@ -247,19 +244,14 @@ export default async function SiteDetailPage({ params }: PageProps) {
                 </div>
               </Group>
               <Group>
-                <Link
+                <Button
+                  component="a"
                   href={`/chat?source=${encodeURIComponent(site.domain)}`}
-                  passHref
-                  legacyBehavior
+                  variant="light"
+                  leftSection={<IconCheck size={16} />}
                 >
-                  <Button
-                    component="a"
-                    variant="light"
-                    leftSection={<IconCheck size={16} />}
-                  >
-                    Chat with Docs
-                  </Button>
-                </Link>
+                  Chat with Docs
+                </Button>
                 <form action={`/api/discover`} method="POST">
                   <input type="hidden" name="domain" value={site.domain} />
                   <Button

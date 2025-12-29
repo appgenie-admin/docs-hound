@@ -11,7 +11,6 @@ import {
   Anchor,
 } from '@mantine/core'
 import { IconPlus, IconRefresh, IconWorld } from '@tabler/icons-react'
-import Link from 'next/link'
 import { getSiteRegistry, type Site } from '@docs-hound/shared-db'
 import { DeleteSiteButton } from '@/components/DeleteSiteButton'
 
@@ -58,6 +57,9 @@ function formatDate(date: string | null): string {
 export default async function Home() {
   const sites = await getSites()
 
+  // Sort sites by name alphabetically (LATCH: Alphabet)
+  const sortedSites = [...sites].sort((a, b) => a.name.localeCompare(b.name))
+
   return (
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
@@ -68,24 +70,21 @@ export default async function Home() {
           </Text>
         </div>
         <Group gap="sm">
-          <Link href="/chat" passHref legacyBehavior>
-            <Button component="a" variant="light">
-              Chat with Docs
-            </Button>
-          </Link>
-          <Link href="/settings" passHref legacyBehavior>
-            <Button component="a" variant="subtle">
-              Settings
-            </Button>
-          </Link>
-          <Link href="/sites/new" passHref legacyBehavior>
-            <Button component="a" leftSection={<IconPlus size={16} />}>
-              Add Site
-            </Button>
-          </Link>
+          <Button component="a" href="/chat" variant="light">
+            Chat with Docs
+          </Button>
+          <Button component="a" href="/settings" variant="subtle">
+            Settings
+          </Button>
+          <Button
+            component="a"
+            href="/sites/new"
+            leftSection={<IconPlus size={16} />}
+          >
+            Add Site
+          </Button>
         </Group>
       </Group>
-
       {sites.length === 0 ? (
         <Card withBorder padding="xl" radius="md">
           <Stack align="center" gap="md">
@@ -97,24 +96,25 @@ export default async function Home() {
               Add your first documentation site to start building your
               searchable knowledge base.
             </Text>
-            <Link href="/sites/new" passHref legacyBehavior>
-              <Button component="a" leftSection={<IconPlus size={16} />}>
-                Add Your First Site
-              </Button>
-            </Link>
+            <Button
+              component="a"
+              href="/sites/new"
+              leftSection={<IconPlus size={16} />}
+            >
+              Add Your First Site
+            </Button>
           </Stack>
         </Card>
       ) : (
         <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="lg">
-          {sites.map((site) => (
+          {sortedSites.map((site) => (
             <Card key={site.domain} withBorder padding="lg" radius="md">
               <Group justify="space-between" mb="xs">
                 <Anchor
                   href={`/sites/${encodeURIComponent(site.domain)}`}
-                  component={Link}
                   fw={500}
                   size="lg"
-                  style={{ color: 'inherit' }}
+                  style={{ color: 'inherit', textDecoration: 'none' }}
                 >
                   {site.name}
                 </Anchor>
@@ -157,30 +157,24 @@ export default async function Home() {
               </Stack>
 
               <Group mt="md" gap="xs">
-                <Link
+                <Button
+                  component="a"
                   href={`/sites/${encodeURIComponent(site.domain)}`}
-                  passHref
-                  legacyBehavior
+                  size="xs"
+                  variant="light"
                 >
-                  <Button component="a" size="xs" variant="light">
-                    View Details
-                  </Button>
-                </Link>
+                  View Details
+                </Button>
                 {site.status === 'indexed' && (
-                  <Link
+                  <Button
+                    component="a"
                     href={`/sites/${encodeURIComponent(site.domain)}/rediscover`}
-                    passHref
-                    legacyBehavior
+                    size="xs"
+                    variant="outline"
+                    leftSection={<IconRefresh size={14} />}
                   >
-                    <Button
-                      component="a"
-                      size="xs"
-                      variant="outline"
-                      leftSection={<IconRefresh size={14} />}
-                    >
-                      Re-index
-                    </Button>
-                  </Link>
+                    Re-index
+                  </Button>
                 )}
                 <DeleteSiteButton domain={site.domain} />
               </Group>

@@ -13,7 +13,6 @@ import {
   Anchor,
 } from '@mantine/core'
 import { IconArrowLeft, IconWorld } from '@tabler/icons-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -68,7 +67,13 @@ export default function AddSitePage() {
 
   return (
     <Container size="sm" py="xl">
-      <Anchor component={Link} href="/" c="dimmed" size="sm" mb="md">
+      <Anchor
+        href="/"
+        c="dimmed"
+        size="sm"
+        mb="md"
+        style={{ textDecoration: 'none' }}
+      >
         <Group gap={4}>
           <IconArrowLeft size={14} />
           Back to Dashboard
@@ -115,7 +120,7 @@ export default function AddSitePage() {
             />
 
             <Group justify="flex-end" mt="md">
-              <Button component={Link} href="/" variant="subtle">
+              <Button component="a" href="/" variant="subtle">
                 Cancel
               </Button>
               <Button type="submit" loading={loading}>

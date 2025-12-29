@@ -223,7 +223,7 @@ export class SiteRegistry {
     await this.redis.del(key)
 
     if (urls.length > 0) {
-      await this.redis.sadd(key, urls)
+      await this.redis.sadd(key, urls[0], ...urls.slice(1))
     }
 
     // Update discovered count
@@ -254,7 +254,7 @@ export class SiteRegistry {
     await this.redis.del(key)
 
     if (urls.length > 0) {
-      await this.redis.sadd(key, urls)
+      await this.redis.sadd(key, urls[0], ...urls.slice(1))
     }
 
     // Update page count

@@ -158,11 +158,14 @@ cd docs-hound
 # Install dependencies
 pnpm install
 
-# Copy environment template
-cp env.template .env.local
+# Set up environment variables (choose one method):
 
-# Edit .env.local with your credentials
-# (see Environment Variables section)
+# Method 1: Pull from Vercel (if you have a linked Vercel project)
+pnpm env:pull
+
+# Method 2: Copy from template and edit manually
+cp env.template apps/web/.env.local
+# Edit apps/web/.env.local with your credentials
 
 # Start development server
 pnpm dev
@@ -170,7 +173,7 @@ pnpm dev
 
 ### Environment Variables
 
-Create a `.env.local` file with the following:
+Create a `apps/web/.env.local` file with the following:
 
 ```env
 # OpenAI - Required for embeddings and chat
@@ -193,6 +196,29 @@ QSTASH_TOKEN=...
 CRON_SECRET=...
 MCP_API_KEY=...
 ```
+
+> **Important**: In this monorepo, the `.env.local` file must be placed in `apps/web/.env.local` (not in the root directory) so Next.js can find it.
+
+#### Pulling Environment Variables from Vercel
+
+If you have a Vercel project linked to this repository, you can automatically pull environment variables:
+
+```bash
+# From the project root
+pnpm env:pull
+```
+
+This runs `vercel env pull --yes apps/web/.env.local` which:
+
+1. Connects to your Vercel project
+2. Downloads all environment variables for the development environment
+3. Saves them to `apps/web/.env.local` (the correct location for Next.js)
+
+**Prerequisites for `env:pull`:**
+
+- Vercel CLI installed globally: `npm i -g vercel`
+- Authenticated with Vercel: `vercel login`
+- Project linked to Vercel: `vercel link` (or deployed at least once)
 
 > **Note for Vercel Deployments**: When using Vercel Upstash integrations, Vercel automatically sets:
 >

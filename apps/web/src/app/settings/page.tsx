@@ -14,7 +14,6 @@ import {
   ActionIcon,
 } from '@mantine/core'
 import { IconArrowLeft, IconCopy, IconCheck } from '@tabler/icons-react'
-import Link from 'next/link'
 
 const mcpConfig = {
   mcpServers: {
@@ -37,7 +36,13 @@ export default function SettingsPage() {
 
   return (
     <Container size="md" py="xl">
-      <Anchor component={Link} href="/" c="dimmed" size="sm" mb="md">
+      <Anchor
+        href="/"
+        c="dimmed"
+        size="sm"
+        mb="md"
+        style={{ textDecoration: 'none' }}
+      >
         <Group gap={4}>
           <IconArrowLeft size={14} />
           Back to Dashboard

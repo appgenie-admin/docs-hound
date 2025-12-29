@@ -32,6 +32,7 @@ const DISCOVERY_LIMIT = 1000
  */
 export class Crawler {
   private visited = new Set<string>()
+  private queued = new Set<string>() // URLs queued for crawling (to prevent duplicate queue entries)
   private discovered = new Set<string>() // URLs found but not crawled (due to maxPages)
   private queue: PQueue
   private results: CrawlResult[] = []
@@ -114,8 +115,8 @@ export class Crawler {
         return false
       }
 
-      // Already visited (check normalized version)
-      if (this.visited.has(normalized)) {
+      // Already visited or queued (check normalized version)
+      if (this.visited.has(normalized) || this.queued.has(normalized)) {
         return false
       }
 
@@ -197,16 +198,19 @@ export class Crawler {
     const normalized = this.normalizeUrl(url)
 
     console.log(
-      `[Crawler] Task started for ${url} (visited: ${this.visited.size}/${this.maxPages})`
+      `[Crawler] Task started for ${url} (visited: ${this.visited.size}/${this.maxPages}, queued: ${this.queued.size})`
     )
 
-    // Check if should crawl (and if we've hit max pages)
-    if (!this.shouldCrawl(url, baseUrl)) {
-      console.log(`[Crawler] Skipping ${url} (shouldCrawl=false)`)
+    // Remove from queued set since we're now processing it
+    this.queued.delete(normalized)
+
+    // Check if already visited (race condition - multiple tasks may have been queued before any processed)
+    if (this.visited.has(normalized)) {
+      console.log(`[Crawler] Skipping ${url} (already visited)`)
       return
     }
 
-    // Double-check max pages before marking visited (race condition protection)
+    // Check max pages before marking visited (race condition protection)
     if (this.visited.size >= this.maxPages) {
       console.log(`[Crawler] Skipping ${url} (max pages already reached)`)
       this.hitLimit = true
@@ -294,6 +298,8 @@ export class Crawler {
 
           // Check if this link should be crawled (includes deduplication)
           if (this.shouldCrawl(link, baseUrl)) {
+            // Mark as queued to prevent duplicate queue entries
+            this.queued.add(normalizedLink)
             // Add to queue
             this.queue.add(() => this.crawlPage(link, depth + 1, baseUrl))
             addedCount++
@@ -330,6 +336,7 @@ export class Crawler {
     this.results = []
     this.discoveryResults = []
     this.visited.clear()
+    this.queued.clear()
     this.discovered.clear()
     this.hitLimit = false
 

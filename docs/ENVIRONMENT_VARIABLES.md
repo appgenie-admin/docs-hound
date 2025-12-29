@@ -113,17 +113,45 @@ These are automatically set by Vercel integrations but not directly used by the 
 
 ### For Local Development
 
-1. Copy `env.template` to `.env.local`
+#### Option 1: Pull from Vercel (Recommended if deployed)
+
+If you have a Vercel project deployed, you can automatically pull all environment variables:
+
+```bash
+# Make sure you're in the project root
+cd /path/to/docs-hound
+
+# Pull environment variables from Vercel
+pnpm env:pull
+```
+
+This will:
+
+1. Connect to your Vercel project
+2. Download environment variables for the development environment
+3. Save them to `apps/web/.env.local` automatically
+
+**Prerequisites:**
+
+- Vercel CLI installed: `npm i -g vercel`
+- Authenticated: `vercel login`
+- Project linked: `vercel link` (or deployed at least once)
+
+#### Option 2: Manual Setup
+
+1. Copy `env.template` to `apps/web/.env.local` (not root!)
 2. Get credentials from [Upstash Console](https://console.upstash.com)
 3. Use the **local naming** (`UPSTASH_*` for all services)
 4. Fill in all required variables
 
 ```bash
-cp env.template .env.local
-# Edit .env.local with your credentials
+cp env.template apps/web/.env.local
+# Edit apps/web/.env.local with your credentials
 ```
 
-**Example `.env.local` for local development:**
+> **Important**: In this monorepo, the `.env.local` file must be in `apps/web/.env.local` (where the Next.js app is) so Next.js can find it during development.
+
+**Example `apps/web/.env.local` for local development:**
 
 ```env
 OPENAI_API_KEY=sk-...
@@ -217,16 +245,20 @@ The MCP server needs environment variables set in your Cursor config (`.cursor/m
 
 If you see this error, check:
 
-1. **Which environment are you in?**
+1. **Is the `.env.local` file in the right place?**
+   - For local development: Must be in `apps/web/.env.local` (NOT in root!)
+   - Vercel deployment: Environment variables are set in Vercel dashboard
+
+2. **Which environment are you in?**
    - Vercel deployment → Should have `KV_*` for Redis, `UPSTASH_VECTOR_*` for Vector
    - Local development → Should have `UPSTASH_*` for both
 
-2. **Are the variables set?**
+3. **Are the variables set?**
    - Vercel: Check Settings → Environment Variables
-   - Local: Check your `.env.local` file exists and has values
+   - Local: Check `apps/web/.env.local` file exists and has values
    - MCP: Check your `.cursor/mcp.json` file
 
-3. **Did you redeploy after adding variables?** (Vercel only)
+4. **Did you redeploy after adding variables?** (Vercel only)
    - Vercel requires redeployment for env var changes to take effect
    - Go to Deployments → Click "..." → Redeploy
 

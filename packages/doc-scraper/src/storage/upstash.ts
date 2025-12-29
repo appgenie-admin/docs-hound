@@ -160,31 +160,54 @@ export class UpstashDocStorage {
 
   /**
    * Delete documents by source (domain)
+   * Uses iterative batch deletion to handle sources with >1000 documents
    */
   async deleteBySource(source: string): Promise<void> {
     console.log(`[UpstashStorage] Deleting documents for source: ${source}...`)
 
     try {
-      // Query all documents for this source
-      const results = await this.index.query({
-        data: '', // Empty query to get all
-        topK: 10000, // Get as many as possible
-        includeMetadata: true,
-        filter: `source = '${source}'`,
-      })
+      let totalDeleted = 0
+      let batchCount = 0
+      const batchSize = 1000 // Upstash query limit
 
-      if (results.length === 0) {
-        console.log(`[UpstashStorage] No documents found for source: ${source}`)
-        return
+      // Keep querying and deleting until no more documents are found
+      while (true) {
+        // Query up to 1000 documents for this source
+        const results = await this.index.query({
+          data: '', // Empty query to get all
+          topK: batchSize,
+          includeMetadata: true,
+          filter: `source = '${source}'`,
+        })
+
+        if (results.length === 0) {
+          break
+        }
+
+        // Delete this batch by IDs
+        const ids = results.map((r) => r.id as string)
+        await this.index.delete(ids)
+
+        totalDeleted += ids.length
+        batchCount++
+
+        console.log(
+          `[UpstashStorage] ✓ Deleted batch ${batchCount} (${ids.length} documents)`
+        )
+
+        // If we got fewer than batchSize results, we're done
+        if (results.length < batchSize) {
+          break
+        }
       }
 
-      // Delete by IDs
-      const ids = results.map((r) => r.id as string)
-      await this.index.delete(ids)
-
-      console.log(
-        `[UpstashStorage] ✓ Deleted ${ids.length} documents for source: ${source}`
-      )
+      if (totalDeleted === 0) {
+        console.log(`[UpstashStorage] No documents found for source: ${source}`)
+      } else {
+        console.log(
+          `[UpstashStorage] ✓ Deleted ${totalDeleted} total documents for source: ${source} in ${batchCount} batch(es)`
+        )
+      }
     } catch (error: unknown) {
       const err = error as { message?: string }
       console.error(`[UpstashStorage] ✗ Delete failed:`, err.message)

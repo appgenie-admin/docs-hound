@@ -26,9 +26,11 @@ export function DiscoveredUrlsList({ domain, urls }: DiscoveredUrlsListProps) {
   const [loading, setLoading] = useState(false)
 
   const filteredUrls = useMemo(() => {
-    if (!search) return urls
+    // Sort URLs alphabetically (LATCH: Alphabet)
+    const sortedUrls = [...urls].sort((a, b) => a.localeCompare(b))
+    if (!search) return sortedUrls
     const searchLower = search.toLowerCase()
-    return urls.filter((url) => url.toLowerCase().includes(searchLower))
+    return sortedUrls.filter((url) => url.toLowerCase().includes(searchLower))
   }, [urls, search])
 
   const allSelected = selectedUrls.size === urls.length
@@ -111,7 +113,7 @@ export function DiscoveredUrlsList({ domain, urls }: DiscoveredUrlsListProps) {
         </Group>
       </Group>
 
-      <ScrollArea h={400}>
+      <ScrollArea style={{ height: 'calc(100vh - 420px)' }}>
         <Stack gap={4}>
           {filteredUrls.map((url) => (
             <Paper

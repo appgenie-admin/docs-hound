@@ -10,7 +10,6 @@ import {
   Select,
 } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { ChatInterface } from '@/components/ChatInterface'
@@ -33,14 +32,22 @@ function ChatPageContent() {
       .then((res) => res.json())
       .then((data: Site[]) => {
         const indexed = data.filter((s) => s.status === 'indexed')
-        setSites(indexed)
+        // Sort sites alphabetically by name (LATCH: Alphabet)
+        const sorted = indexed.sort((a, b) => a.name.localeCompare(b.name))
+        setSites(sorted)
       })
       .catch(console.error)
   }, [])
 
   return (
     <Container size="lg" py="xl">
-      <Anchor component={Link} href="/" c="dimmed" size="sm" mb="md">
+      <Anchor
+        href="/"
+        c="dimmed"
+        size="sm"
+        mb="md"
+        style={{ textDecoration: 'none' }}
+      >
         <Group gap={4}>
           <IconArrowLeft size={14} />
           Back to Dashboard

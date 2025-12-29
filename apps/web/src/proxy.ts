@@ -5,10 +5,10 @@ const AUTH_COOKIE_NAME = 'docs-hound-auth'
 const AUTH_TOKEN_VALUE = 'authenticated'
 
 /**
- * Simple password protection middleware
+ * Simple password protection proxy
  * Checks for authentication cookie before allowing access to protected routes
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow access to login page and auth API

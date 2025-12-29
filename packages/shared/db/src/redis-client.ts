@@ -36,12 +36,16 @@ export class SiteRegistry {
   private redis: Redis
 
   constructor() {
-    const url = process.env.UPSTASH_REDIS_REST_URL
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN
+    // Vercel integration provides KV_REST_API_URL and KV_REST_API_TOKEN
+    // Support both Vercel naming and legacy UPSTASH_REDIS naming
+    const url =
+      process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+    const token =
+      process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
 
     if (!url || !token) {
       throw new Error(
-        'Missing required environment variables: UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN'
+        'Missing required environment variables: KV_REST_API_URL and KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN)'
       )
     }
 

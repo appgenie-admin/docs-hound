@@ -22,10 +22,11 @@ const mcpConfig = {
       command: 'npx',
       args: ['tsx', 'mcp-server/src/index.ts'],
       env: {
-        UPSTASH_VECTOR_REST_URL: '<your-upstash-vector-url>',
-        UPSTASH_VECTOR_REST_TOKEN: '<your-upstash-vector-token>',
-        UPSTASH_REDIS_REST_URL: '<your-upstash-redis-url>',
-        UPSTASH_REDIS_REST_TOKEN: '<your-upstash-redis-token>',
+        OPENAI_API_KEY: '<your-openai-api-key>',
+        KV_REST_API_URL: '<your-redis-url-from-vercel>',
+        KV_REST_API_TOKEN: '<your-redis-token-from-vercel>',
+        UPSTASH_VECTOR_REST_URL: '<your-vector-url-from-vercel>',
+        UPSTASH_VECTOR_REST_TOKEN: '<your-vector-token-from-vercel>',
       },
     },
   },
@@ -101,7 +102,7 @@ export default function SettingsPage() {
 
           <Text size="sm" c="dimmed" mt="md">
             Replace the environment variable placeholders with your actual
-            Upstash credentials.
+            credentials from Vercel Environment Variables settings.
           </Text>
         </Paper>
 

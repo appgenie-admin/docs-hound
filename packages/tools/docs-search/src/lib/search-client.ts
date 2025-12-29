@@ -35,6 +35,7 @@ export async function searchDocs(
   source?: string,
   limit: number = 5
 ): Promise<SearchResult[]> {
+  // Vercel integration provides UPSTASH_VECTOR_REST_URL and UPSTASH_VECTOR_REST_TOKEN
   const url = process.env.UPSTASH_VECTOR_REST_URL
   const token = process.env.UPSTASH_VECTOR_REST_TOKEN
 

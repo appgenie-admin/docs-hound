@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "env:pull": "vercel env pull --yes .env.local",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",

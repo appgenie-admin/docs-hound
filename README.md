@@ -181,6 +181,8 @@ UPSTASH_VECTOR_REST_URL=https://...upstash.io
 UPSTASH_VECTOR_REST_TOKEN=...
 
 # Upstash Redis - Site registry and metadata
+# For local dev, use UPSTASH_REDIS_* naming
+# Vercel uses KV_REST_API_URL and KV_REST_API_TOKEN (code supports both)
 UPSTASH_REDIS_REST_URL=https://...upstash.io
 UPSTASH_REDIS_REST_TOKEN=...
 
@@ -191,6 +193,14 @@ QSTASH_TOKEN=...
 CRON_SECRET=...
 MCP_API_KEY=...
 ```
+
+> **Note for Vercel Deployments**: When using Vercel Upstash integrations, Vercel automatically sets:
+>
+> - Redis: `KV_REST_API_URL`, `KV_REST_API_TOKEN` (and other KV\_\* variables)
+> - Vector: `UPSTASH_VECTOR_REST_URL`, `UPSTASH_VECTOR_REST_TOKEN`
+> - QStash: `QSTASH_URL`, `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY`
+>
+> The code supports both Vercel's `KV_*` naming and the `UPSTASH_REDIS_*` naming for Redis.
 
 ### Creating Upstash Resources
 
@@ -275,15 +285,18 @@ Add to your Cursor settings (`.cursor/mcp.json` or via Settings):
       "args": ["tsx", "mcp-server/src/index.ts"],
       "cwd": "/path/to/docs-hound",
       "env": {
-        "UPSTASH_VECTOR_REST_URL": "your-url",
-        "UPSTASH_VECTOR_REST_TOKEN": "your-token",
-        "UPSTASH_REDIS_REST_URL": "your-url",
-        "UPSTASH_REDIS_REST_TOKEN": "your-token"
+        "OPENAI_API_KEY": "your-key",
+        "KV_REST_API_URL": "your-redis-url",
+        "KV_REST_API_TOKEN": "your-redis-token",
+        "UPSTASH_VECTOR_REST_URL": "your-vector-url",
+        "UPSTASH_VECTOR_REST_TOKEN": "your-vector-token"
       }
     }
   }
 }
 ```
+
+> **Note**: When using Vercel, copy these exact variable names and values from your Vercel Environment Variables. For local development, you can use `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` instead of the `KV_*` names (code supports both).
 
 #### Available MCP Tools
 

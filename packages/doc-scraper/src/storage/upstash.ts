@@ -30,6 +30,7 @@ export class UpstashDocStorage {
   private index: Index
 
   constructor() {
+    // Vercel integration provides UPSTASH_VECTOR_REST_URL and UPSTASH_VECTOR_REST_TOKEN
     const url = process.env.UPSTASH_VECTOR_REST_URL
     const token = process.env.UPSTASH_VECTOR_REST_TOKEN
 

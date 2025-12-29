@@ -24,6 +24,7 @@ import { getSiteRegistry, type Site } from '@docs-hound/shared-db'
 import { DiscoveredUrlsList } from '@/components/DiscoveredUrlsList'
 import { IndexedPagesList } from '@/components/IndexedPagesList'
 import { SiteStatusPoller } from '@/components/SiteStatusPoller'
+import { UrlFiltersModal } from '@/components/UrlFiltersModal'
 
 // Force dynamic rendering since we need runtime env vars
 export const dynamic = 'force-dynamic'
@@ -150,12 +151,18 @@ export default async function SiteDetailPage({ params }: PageProps) {
               Click the button below to start crawling the site and discovering
               pages to index.
             </Text>
-            <form action={`/api/discover`} method="POST">
-              <input type="hidden" name="domain" value={site.domain} />
-              <Button type="submit" leftSection={<IconSearch size={16} />}>
-                Start Discovery
-              </Button>
-            </form>
+            <Group>
+              <form action={`/api/discover`} method="POST">
+                <input type="hidden" name="domain" value={site.domain} />
+                <Button type="submit" leftSection={<IconSearch size={16} />}>
+                  Start Discovery
+                </Button>
+              </form>
+              <UrlFiltersModal
+                domain={site.domain}
+                currentFilters={site.urlFilters}
+              />
+            </Group>
           </Stack>
         </Card>
       )}
@@ -194,6 +201,22 @@ export default async function SiteDetailPage({ params }: PageProps) {
                 )}
               </Text>
             </div>
+            <Group gap="xs">
+              <form action={`/api/discover`} method="POST">
+                <input type="hidden" name="domain" value={site.domain} />
+                <Button
+                  type="submit"
+                  variant="outline"
+                  leftSection={<IconRefresh size={16} />}
+                >
+                  Re-discover
+                </Button>
+              </form>
+              <UrlFiltersModal
+                domain={site.domain}
+                currentFilters={site.urlFilters}
+              />
+            </Group>
           </Group>
           <DiscoveredUrlsList domain={site.domain} urls={discoveredUrls} />
         </Paper>
@@ -262,6 +285,10 @@ export default async function SiteDetailPage({ params }: PageProps) {
                     Re-discover
                   </Button>
                 </form>
+                <UrlFiltersModal
+                  domain={site.domain}
+                  currentFilters={site.urlFilters}
+                />
               </Group>
             </Group>
           </Card>

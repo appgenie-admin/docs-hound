@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Anchor,
   Paper,
   ScrollArea,
   Stack,
@@ -69,10 +70,16 @@ export function IndexedPagesList({ urls }: IndexedPagesListProps) {
           <Stack gap={4}>
             {filteredUrls.map((url) => (
               <Paper key={url} p="xs" withBorder>
-                <Group justify="space-between" gap="xs">
-                  <Text size="sm" style={{ wordBreak: 'break-all', flex: 1 }}>
+                <Group justify="space-between" gap="xs" wrap="nowrap">
+                  <Anchor
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="sm"
+                    style={{ wordBreak: 'break-all', flex: 1 }}
+                  >
                     {url}
-                  </Text>
+                  </Anchor>
                   <Group gap={4}>
                     <Tooltip label="View markdown">
                       <ActionIcon

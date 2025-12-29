@@ -25,6 +25,63 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   }
 }
 
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  try {
+    const { domain } = await context.params
+    const decodedDomain = decodeURIComponent(domain)
+    const body = await request.json()
+
+    const registry = getSiteRegistry()
+
+    // Check if site exists
+    const exists = await registry.siteExists(decodedDomain)
+    if (!exists) {
+      return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+    }
+
+    // Validate URL filters if provided
+    if (body.urlFilters) {
+      if (
+        !Array.isArray(body.urlFilters.includePatterns) ||
+        !Array.isArray(body.urlFilters.excludePatterns)
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'URL filters must contain includePatterns and excludePatterns arrays',
+          },
+          { status: 400 }
+        )
+      }
+
+      // Test that patterns are valid regex
+      try {
+        body.urlFilters.includePatterns.forEach((p: string) => new RegExp(p))
+        body.urlFilters.excludePatterns.forEach((p: string) => new RegExp(p))
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid regex pattern in URL filters' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Update site metadata
+    await registry.updateSite(decodedDomain, body)
+
+    // Get updated site
+    const site = await registry.getSite(decodedDomain)
+
+    return NextResponse.json({ domain: decodedDomain, ...site })
+  } catch (error) {
+    console.error('Failed to update site:', error)
+    return NextResponse.json(
+      { error: 'Failed to update site' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
     const { domain } = await context.params

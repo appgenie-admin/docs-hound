@@ -1,3 +1,10 @@
 // Database client exports
 export { SiteRegistry, getSiteRegistry } from './redis-client'
-export type { Site, SiteMetadata, SiteStatus, DiscoveredUrl } from './types'
+export { logger } from './logger'
+export type {
+  Site,
+  SiteMetadata,
+  SiteStatus,
+  DiscoveredUrl,
+  UrlFilters,
+} from './types'

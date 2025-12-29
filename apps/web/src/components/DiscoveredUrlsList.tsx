@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Anchor,
   Button,
   Checkbox,
   Group,
@@ -10,7 +11,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core'
-import { IconSearch, IconUpload } from '@tabler/icons-react'
+import { IconSearch, IconUpload, IconExternalLink } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { useState, useMemo } from 'react'
 
@@ -123,15 +124,26 @@ export function DiscoveredUrlsList({ domain, urls }: DiscoveredUrlsListProps) {
               style={{ cursor: 'pointer' }}
               onClick={() => toggleUrl(url)}
             >
-              <Group gap="sm">
+              <Group gap="sm" wrap="nowrap">
                 <Checkbox
                   checked={selectedUrls.has(url)}
                   onChange={() => toggleUrl(url)}
                   onClick={(e) => e.stopPropagation()}
                 />
-                <Text size="sm" style={{ wordBreak: 'break-all' }}>
+                <Anchor
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="sm"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ wordBreak: 'break-all', flex: 1 }}
+                >
                   {url}
-                </Text>
+                </Anchor>
+                <IconExternalLink
+                  size={14}
+                  style={{ flexShrink: 0, opacity: 0.5 }}
+                />
               </Group>
             </Paper>
           ))}

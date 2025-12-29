@@ -16,6 +16,8 @@ Docs Hound solves the problem of making external documentation accessible to AI 
 | Feature                | Description                                               |
 | ---------------------- | --------------------------------------------------------- |
 | **Two-Stage Indexing** | Preview discovered URLs before indexing to ensure quality |
+| **URL Filters**        | Regex-based include/exclude patterns for version control  |
+| **Soft 404 Detection** | Automatically filters out pages with 404-like content     |
 | **1000 Page Limit**    | Discovery caps at 1000 pages to prevent runaway crawls    |
 | **Semantic Search**    | Vector-based search using OpenAI embeddings               |
 | **Source Filtering**   | Search all docs or filter by specific documentation site  |
@@ -248,7 +250,11 @@ This runs `vercel env pull --yes apps/web/.env.local` which:
 1. **Navigate to Dashboard** - Open `http://localhost:3000`
 2. **Click "Add Site"** - Enter the documentation URL (e.g., `https://docs.example.com`)
 3. **Review Site Details** - Confirm the name, description, and base URL
-4. **Start Discovery** - Click "Start Discovery" to begin crawling
+4. **Configure URL Filters (Optional)** - Add regex patterns to control which pages are crawled:
+   - **Include patterns**: Only crawl URLs matching these patterns (e.g., for specific versions)
+   - **Exclude patterns**: Skip URLs matching these patterns
+   - See [URL Filters Guide](docs/URL_FILTERS.md) for detailed examples
+5. **Start Discovery** - Click "Add & Start Discovery" to begin crawling
 
 ### Two-Stage Indexing Workflow
 
@@ -260,8 +266,9 @@ When you start discovery:
 
 - The crawler visits the base URL
 - It follows internal links to discover pages
+- **URL filters are applied** if configured (include/exclude patterns)
 - **Maximum 1000 pages** are discovered (to prevent runaway crawls)
-- **Maximum depth of 2** levels from the base URL
+- **Maximum depth of 5** levels from the base URL
 - Only URLs on the same domain are discovered
 
 The site status changes: `pending` → `discovering` → `discovered`
@@ -308,8 +315,8 @@ Add to your Cursor settings (`.cursor/mcp.json` or via Settings):
   "mcpServers": {
     "docs-hound": {
       "command": "npx",
-      "args": ["tsx", "mcp-server/src/index.ts"],
-      "cwd": "/path/to/docs-hound",
+      "args": ["tsx", "/absolute/path/to/docs-hound/mcp-server/src/index.ts"],
+      "cwd": "/absolute/path/to/docs-hound",
       "env": {
         "OPENAI_API_KEY": "your-key",
         "KV_REST_API_URL": "your-redis-url",
@@ -322,7 +329,12 @@ Add to your Cursor settings (`.cursor/mcp.json` or via Settings):
 }
 ```
 
-> **Note**: When using Vercel, copy these exact variable names and values from your Vercel Environment Variables. For local development, you can use `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` instead of the `KV_*` names (code supports both).
+> **Note**:
+>
+> - Use **absolute paths** for both `cwd` and in `args` (e.g., `/Users/you/Projects/docs-hound/...`)
+> - When using Vercel, copy these exact variable names and values from your Vercel Environment Variables
+> - For local development, you can use `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` instead of the `KV_*` names (code supports both)
+> - The MCP server automatically sets `MCP_MODE=true` to suppress info logs
 
 #### Available MCP Tools
 

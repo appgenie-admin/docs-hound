@@ -11,16 +11,22 @@ import {
   Paper,
   Group,
   Anchor,
+  Divider,
 } from '@mantine/core'
 import { IconArrowLeft, IconWorld } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { UrlFiltersForm, type UrlFilters } from '@/components/UrlFiltersForm'
 
 export default function AddSitePage() {
   const router = useRouter()
   const [url, setUrl] = useState('')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [urlFilters, setUrlFilters] = useState<UrlFilters>({
+    includePatterns: [],
+    excludePatterns: [],
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -41,7 +47,7 @@ export default function AddSitePage() {
       const response = await fetch('/api/sites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, name, description }),
+        body: JSON.stringify({ url, name, description, urlFilters }),
       })
 
       if (response.ok) {
@@ -66,7 +72,7 @@ export default function AddSitePage() {
   }
 
   return (
-    <Container size="sm" py="xl">
+    <Container size="lg" py="xl">
       <Anchor
         href="/"
         c="dimmed"
@@ -117,6 +123,18 @@ export default function AddSitePage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+            />
+
+            <Divider
+              label="URL Filters (Optional)"
+              labelPosition="center"
+              my="md"
+            />
+
+            <UrlFiltersForm
+              initialFilters={urlFilters}
+              onChange={setUrlFilters}
+              showExamples={true}
             />
 
             <Group justify="flex-end" mt="md">

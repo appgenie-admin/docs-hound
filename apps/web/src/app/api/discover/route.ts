@@ -60,6 +60,20 @@ async function discoverUrls(domain: string, baseUrl: string): Promise<void> {
   const registry = getSiteRegistry()
 
   try {
+    // Get site metadata to fetch URL filters
+    const site = await registry.getSite(domain)
+    if (!site) {
+      throw new Error('Site not found')
+    }
+
+    // Build crawler options with URL filters
+    const includePatterns = site.urlFilters?.includePatterns
+      ? site.urlFilters.includePatterns.map((p) => new RegExp(p))
+      : []
+    const excludePatterns = site.urlFilters?.excludePatterns
+      ? site.urlFilters.excludePatterns.map((p) => new RegExp(p))
+      : []
+
     const crawler = new Crawler({
       maxDepth: 5,
       maxPages: 1000, // Discovery limit
@@ -67,6 +81,8 @@ async function discoverUrls(domain: string, baseUrl: string): Promise<void> {
       delayMs: 300,
       allowedDomains: [domain],
       discoveryMode: true,
+      includePatterns,
+      excludePatterns,
     })
 
     // Discover URLs

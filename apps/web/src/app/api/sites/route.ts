@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSiteRegistry } from '@docs-hound/shared-db'
+import { getSiteRegistry, type UrlFilters } from '@docs-hound/shared-db'
 
 export async function GET() {
   try {
@@ -15,7 +15,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { url, name, description } = body
+    const { url, name, description, urlFilters } = body
 
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 })
@@ -26,6 +26,33 @@ export async function POST(request: NextRequest) {
       new URL(url)
     } catch {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
+    }
+
+    // Validate URL filters if provided
+    if (urlFilters) {
+      if (
+        !Array.isArray(urlFilters.includePatterns) ||
+        !Array.isArray(urlFilters.excludePatterns)
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'URL filters must contain includePatterns and excludePatterns arrays',
+          },
+          { status: 400 }
+        )
+      }
+
+      // Test that patterns are valid regex
+      try {
+        urlFilters.includePatterns.forEach((p: string) => new RegExp(p))
+        urlFilters.excludePatterns.forEach((p: string) => new RegExp(p))
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid regex pattern in URL filters' },
+          { status: 400 }
+        )
+      }
     }
 
     const registry = getSiteRegistry()
@@ -41,6 +68,14 @@ export async function POST(request: NextRequest) {
     }
 
     const site = await registry.addSite(url, name, description)
+
+    // Update with URL filters if provided
+    if (urlFilters) {
+      await registry.updateSite(domain, {
+        urlFilters: urlFilters as UrlFilters,
+      })
+    }
+
     return NextResponse.json(site, { status: 201 })
   } catch (error) {
     console.error('Failed to add site:', error)

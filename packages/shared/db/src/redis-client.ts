@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis'
 import type { Site, SiteMetadata, SiteStatus } from './types'
+import { logger } from './logger'
 
 /**
  * Redis key patterns:
@@ -26,6 +27,7 @@ function metadataToRecord(
     lastDiscoveredAt: metadata.lastDiscoveredAt || '',
     createdAt: metadata.createdAt,
     errorMessage: metadata.errorMessage || '',
+    urlFilters: metadata.urlFilters ? JSON.stringify(metadata.urlFilters) : '',
   }
 }
 
@@ -50,7 +52,7 @@ export class SiteRegistry {
     }
 
     this.redis = new Redis({ url, token })
-    console.log('[SiteRegistry] Initialized with Upstash Redis')
+    logger.info('[SiteRegistry] Initialized with Upstash Redis')
   }
 
   /**
@@ -106,6 +108,16 @@ export class SiteRegistry {
       return null
     }
 
+    // Parse URL filters if present
+    let urlFilters = undefined
+    if (data.urlFilters && typeof data.urlFilters === 'string') {
+      try {
+        urlFilters = JSON.parse(data.urlFilters)
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+
     return {
       name: (data.name as string) || domain,
       description: (data.description as string) || '',
@@ -117,6 +129,7 @@ export class SiteRegistry {
       lastDiscoveredAt: (data.lastDiscoveredAt as string) || null,
       createdAt: (data.createdAt as string) || new Date().toISOString(),
       errorMessage: (data.errorMessage as string) || undefined,
+      urlFilters,
     }
   }
 
@@ -149,7 +162,7 @@ export class SiteRegistry {
     // Store metadata
     await this.redis.hset(this.siteKey(domain), metadataToRecord(metadata))
 
-    console.log(`[SiteRegistry] Added site: ${domain}`)
+    logger.info(`[SiteRegistry] Added site: ${domain}`)
     return { domain, ...metadata }
   }
 
@@ -176,7 +189,7 @@ export class SiteRegistry {
     }
 
     await this.redis.hset(this.siteKey(domain), updates)
-    console.log(`[SiteRegistry] Updated ${domain} status to: ${status}`)
+    logger.info(`[SiteRegistry] Updated ${domain} status to: ${status}`)
   }
 
   /**
@@ -189,11 +202,17 @@ export class SiteRegistry {
     const record: Record<string, string | number> = {}
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
-        record[key] = value === null ? '' : value
+        if (key === 'urlFilters') {
+          record[key] = value ? JSON.stringify(value) : ''
+        } else if (typeof value === 'string' || typeof value === 'number') {
+          record[key] = value
+        } else {
+          record[key] = value === null ? '' : String(value)
+        }
       }
     }
     await this.redis.hset(this.siteKey(domain), record)
-    console.log(`[SiteRegistry] Updated ${domain} metadata`)
+    logger.info(`[SiteRegistry] Updated ${domain} metadata`)
   }
 
   /**
@@ -210,7 +229,7 @@ export class SiteRegistry {
       `${this.siteKey(domain)}:pages`
     )
 
-    console.log(`[SiteRegistry] Removed site: ${domain}`)
+    logger.info(`[SiteRegistry] Removed site: ${domain}`)
   }
 
   /**
@@ -231,7 +250,7 @@ export class SiteRegistry {
       discoveredCount: urls.length.toString(),
     })
 
-    console.log(
+    logger.info(
       `[SiteRegistry] Stored ${urls.length} discovered URLs for ${domain}`
     )
   }
@@ -262,7 +281,7 @@ export class SiteRegistry {
       pageCount: urls.length.toString(),
     })
 
-    console.log(
+    logger.info(
       `[SiteRegistry] Stored ${urls.length} indexed pages for ${domain}`
     )
   }

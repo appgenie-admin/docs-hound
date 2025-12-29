@@ -10,6 +10,16 @@ export type SiteStatus =
   | 'error' // Discovery or indexing failed
 
 /**
+ * URL filter configuration for controlling which pages to crawl
+ */
+export interface UrlFilters {
+  /** Include only URLs matching these patterns (regex strings). If empty, all URLs are included. */
+  includePatterns: string[]
+  /** Exclude URLs matching these patterns (regex strings). Applied after include patterns. */
+  excludePatterns: string[]
+}
+
+/**
  * Site metadata stored in Redis
  */
 export interface SiteMetadata {
@@ -33,6 +43,8 @@ export interface SiteMetadata {
   createdAt: string
   /** Error message if status is 'error' */
   errorMessage?: string
+  /** URL filter patterns for controlling which pages to crawl */
+  urlFilters?: UrlFilters
 }
 
 /**

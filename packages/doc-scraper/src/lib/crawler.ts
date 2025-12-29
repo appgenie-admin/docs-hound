@@ -8,6 +8,8 @@ export interface CrawlerOptions {
   delayMs?: number
   allowedDomains?: string[]
   excludePatterns?: RegExp[]
+  /** Include only URLs matching these patterns (applied before excludePatterns) */
+  includePatterns?: RegExp[]
   /** Discovery mode - only collect URLs, don't fetch HTML content */
   discoveryMode?: boolean
 }
@@ -42,6 +44,7 @@ export class Crawler {
   private delayMs: number
   private allowedDomains: string[]
   private excludePatterns: RegExp[]
+  private includePatterns: RegExp[]
   private discoveryMode: boolean
   private hitLimit = false
 
@@ -51,6 +54,7 @@ export class Crawler {
     this.delayMs = options.delayMs ?? 500
     this.allowedDomains = options.allowedDomains ?? []
     this.excludePatterns = options.excludePatterns ?? []
+    this.includePatterns = options.includePatterns ?? []
     this.discoveryMode = options.discoveryMode ?? false
 
     // In discovery mode, enforce the 1000 page limit
@@ -135,7 +139,18 @@ export class Crawler {
         return false
       }
 
-      // Check exclude patterns (check before adding to queue)
+      // Apply include patterns first (if any are specified)
+      // If include patterns exist, URL must match at least one
+      if (this.includePatterns.length > 0) {
+        const matchesInclude = this.includePatterns.some((pattern) =>
+          pattern.test(url)
+        )
+        if (!matchesInclude) {
+          return false
+        }
+      }
+
+      // Check exclude patterns (applied after include patterns)
       if (this.excludePatterns.some((pattern) => pattern.test(url))) {
         return false
       }
@@ -184,6 +199,82 @@ export class Crawler {
     } catch (error) {
       console.warn(`[Crawler] Failed to extract links from ${baseUrl}:`, error)
       return []
+    }
+  }
+
+  /**
+   * Detect if a page is a soft 404 (returns 200 but shows 404 content)
+   * Checks title, headers, and body content for 404 indicators
+   */
+  private isSoft404(html: string): boolean {
+    try {
+      const dom = new JSDOM(html)
+      const doc = dom.window.document
+
+      // Check title for 404 indicators
+      const title = doc.title.toLowerCase()
+      if (
+        title.includes('404') ||
+        title.includes('not found') ||
+        title.includes('page not found') ||
+        title.includes('does not exist')
+      ) {
+        return true
+      }
+
+      // Check main heading (h1) for 404 indicators
+      const h1 = doc.querySelector('h1')
+      if (h1) {
+        const h1Text = h1.textContent?.toLowerCase() || ''
+        if (
+          h1Text.includes('404') ||
+          h1Text.includes('not found') ||
+          h1Text.includes('page not found') ||
+          h1Text.includes("couldn't find") ||
+          h1Text.includes('does not exist')
+        ) {
+          return true
+        }
+      }
+
+      // Check body text for common 404 phrases
+      const bodyText = doc.body?.textContent?.toLowerCase() || ''
+
+      // Strong indicators (high confidence)
+      const strongIndicators = [
+        'error 404',
+        'http 404',
+        '404 error',
+        'page you are looking for',
+        "page you're looking for",
+        'page you were looking for',
+        "couldn't find this page",
+        "can't find that page",
+        'this page does not exist',
+        "this page doesn't exist",
+      ]
+
+      for (const indicator of strongIndicators) {
+        if (bodyText.includes(indicator)) {
+          return true
+        }
+      }
+
+      // Check for error pages with minimal content
+      // If the body is very short and contains "not found", it's likely a 404
+      if (bodyText.length < 500) {
+        if (
+          bodyText.includes('not found') &&
+          (bodyText.includes('page') || bodyText.includes('url'))
+        ) {
+          return true
+        }
+      }
+
+      return false
+    } catch (error) {
+      console.warn('[Crawler] Error checking for soft 404:', error)
+      return false
     }
   }
 
@@ -248,6 +339,12 @@ export class Crawler {
       }
 
       const html = await response.text()
+
+      // Check for soft 404s (pages that return 200 but show 404 content)
+      if (this.isSoft404(html)) {
+        console.log(`[Crawler] Soft 404 detected for ${url}, skipping...`)
+        return
+      }
 
       // Store result based on mode
       if (this.discoveryMode) {

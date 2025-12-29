@@ -208,7 +208,7 @@ Configure in Cursor (`~/.cursor/mcp.json`):
   "mcpServers": {
     "docs-hound": {
       "command": "npx",
-      "args": ["tsx", "mcp-server/src/index.ts"],
+      "args": ["tsx", "/absolute/path/to/docs-hound/mcp-server/src/index.ts"],
       "cwd": "/absolute/path/to/docs-hound",
       "env": {
         "OPENAI_API_KEY": "...",
@@ -221,6 +221,8 @@ Configure in Cursor (`~/.cursor/mcp.json`):
   }
 }
 ```
+
+**Important**: Use absolute paths for both `cwd` and in the `args` array. The MCP server automatically sets `MCP_MODE=true` to suppress info logs from stdout.
 
 ## Known Issues
 

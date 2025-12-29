@@ -115,7 +115,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
    Source: ${result.content.source}
    URL: ${result.content.url}
    Score: ${result.score.toFixed(3)}
-   
+
    ${excerpt}`
         })
 
@@ -303,6 +303,9 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 
 // Start the server
 async function main() {
+  // Set MCP mode to suppress info logs from dependencies
+  process.env.MCP_MODE = 'true'
+
   console.error('[MCP Server] Starting Docs Hound MCP Server...')
 
   const transport = new StdioServerTransport()

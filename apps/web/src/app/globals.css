@@ -77,6 +77,12 @@ body {
     'Liberation Mono', monospace;
 }
 
+/* Dark mode styles for inline code */
+[data-mantine-color-scheme='dark'] .markdown-preview code {
+  background-color: var(--mantine-color-dark-6);
+  color: var(--mantine-color-gray-3);
+}
+
 .markdown-preview pre {
   padding: 16px;
   overflow: auto;
@@ -85,6 +91,15 @@ body {
   background-color: var(--mantine-color-gray-1);
   border-radius: 6px;
   margin-bottom: 1em;
+}
+
+/* Dark mode styles for code blocks */
+[data-mantine-color-scheme='dark'] .markdown-preview pre {
+  background-color: var(--mantine-color-dark-6);
+}
+
+[data-mantine-color-scheme='dark'] .markdown-preview pre code {
+  color: var(--mantine-color-gray-3);
 }
 
 .markdown-preview pre code {

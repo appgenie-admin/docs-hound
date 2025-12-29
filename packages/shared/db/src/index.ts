@@ -1,4 +1,3 @@
 // Database client exports
-// Will be implemented in setup-database phase
-
-export const placeholder = true
+export { SiteRegistry, getSiteRegistry } from './redis-client'
+export type { Site, SiteMetadata, SiteStatus, DiscoveredUrl } from './types'

@@ -167,7 +167,11 @@ importers:
 
   packages/shared/db: {}
 
-  packages/tools/docs-search: {}
+  packages/tools/docs-search:
+    dependencies:
+      '@upstash/vector':
+        specifier: ^1.2.2
+        version: 1.2.2
 
 packages:
 

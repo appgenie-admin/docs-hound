@@ -14,9 +14,12 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@docs-hound/shared-db": "workspace:*",
+    "@docs-hound/agent-chat": "workspace:*",
     "@docs-hound/doc-scraper": "workspace:*",
+    "@docs-hound/shared-db": "workspace:*",
     "@docs-hound/tool-docs-search": "workspace:*",
-    "@docs-hound/agent-chat": "workspace:*"
+    "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1"
   }
 }

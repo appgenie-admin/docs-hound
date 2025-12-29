@@ -14,6 +14,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@docs-hound/shared-db": "workspace:*"
+    "@docs-hound/shared-db": "workspace:*",
+    "@docs-hound/doc-scraper": "workspace:*",
+    "@docs-hound/tool-docs-search": "workspace:*",
+    "@docs-hound/agent-chat": "workspace:*"
   }
 }

@@ -114,9 +114,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@docs-hound/agent-chat':
+        specifier: workspace:*
+        version: link:../../packages/agents/chat
+      '@docs-hound/doc-scraper':
+        specifier: workspace:*
+        version: link:../../packages/doc-scraper
       '@docs-hound/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared/db
+      '@docs-hound/tool-docs-search':
+        specifier: workspace:*
+        version: link:../../packages/tools/docs-search
 
   mcp-server:
     dependencies:

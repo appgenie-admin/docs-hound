@@ -26,6 +26,9 @@ import { DiscoveredUrlsList } from '@/components/DiscoveredUrlsList'
 import { IndexedPagesList } from '@/components/IndexedPagesList'
 import { SiteStatusPoller } from '@/components/SiteStatusPoller'
 
+// Force dynamic rendering since we need runtime env vars
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ domain: string }>
 }
@@ -244,14 +247,19 @@ export default async function SiteDetailPage({ params }: PageProps) {
                 </div>
               </Group>
               <Group>
-                <Button
-                  component={Link}
+                <Link
                   href={`/chat?source=${encodeURIComponent(site.domain)}`}
-                  variant="light"
-                  leftSection={<IconCheck size={16} />}
+                  passHref
+                  legacyBehavior
                 >
-                  Chat with Docs
-                </Button>
+                  <Button
+                    component="a"
+                    variant="light"
+                    leftSection={<IconCheck size={16} />}
+                  >
+                    Chat with Docs
+                  </Button>
+                </Link>
                 <form action={`/api/discover`} method="POST">
                   <input type="hidden" name="domain" value={site.domain} />
                   <Button

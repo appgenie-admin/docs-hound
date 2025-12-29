@@ -5,6 +5,9 @@
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "bin": {
+    "docs-hound-mcp": "./src/index.ts"
+  },
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
@@ -16,7 +19,8 @@
   },
   "dependencies": {
     "@docs-hound/tool-docs-search": "workspace:*",
-    "@docs-hound/shared-db": "workspace:*"
+    "@docs-hound/shared-db": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.1"
   },
   "devDependencies": {
     "tsx": "^4.19.2"

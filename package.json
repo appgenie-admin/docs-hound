@@ -13,7 +13,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.77",
+    "@ai-sdk/openai": "^2.0.0",
     "@ai-sdk/react": "^3.0.0",
     "@mantine/core": "^8.3.9",
     "@mantine/form": "^8.3.9",
@@ -55,6 +55,11 @@
     "apps/*",
     "packages/*"
   ],
+  "pnpm": {
+    "overrides": {
+      "@ai-sdk/provider": "^3.0.0"
+    }
+  },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "prettier --write"

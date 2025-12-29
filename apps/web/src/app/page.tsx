@@ -15,6 +15,9 @@ import Link from 'next/link'
 import { getSiteRegistry, type Site } from '@docs-hound/shared-db'
 import { DeleteSiteButton } from '@/components/DeleteSiteButton'
 
+// Force dynamic rendering since we need runtime env vars
+export const dynamic = 'force-dynamic'
+
 async function getSites(): Promise<Site[]> {
   try {
     const registry = getSiteRegistry()
@@ -64,13 +67,23 @@ export default async function Home() {
             Documentation search and indexing platform
           </Text>
         </div>
-        <Button
-          component={Link}
-          href="/sites/new"
-          leftSection={<IconPlus size={16} />}
-        >
-          Add Site
-        </Button>
+        <Group gap="sm">
+          <Link href="/chat" passHref legacyBehavior>
+            <Button component="a" variant="light">
+              Chat with Docs
+            </Button>
+          </Link>
+          <Link href="/settings" passHref legacyBehavior>
+            <Button component="a" variant="subtle">
+              Settings
+            </Button>
+          </Link>
+          <Link href="/sites/new" passHref legacyBehavior>
+            <Button component="a" leftSection={<IconPlus size={16} />}>
+              Add Site
+            </Button>
+          </Link>
+        </Group>
       </Group>
 
       {sites.length === 0 ? (
@@ -84,13 +97,11 @@ export default async function Home() {
               Add your first documentation site to start building your
               searchable knowledge base.
             </Text>
-            <Button
-              component={Link}
-              href="/sites/new"
-              leftSection={<IconPlus size={16} />}
-            >
-              Add Your First Site
-            </Button>
+            <Link href="/sites/new" passHref legacyBehavior>
+              <Button component="a" leftSection={<IconPlus size={16} />}>
+                Add Your First Site
+              </Button>
+            </Link>
           </Stack>
         </Card>
       ) : (
@@ -99,8 +110,8 @@ export default async function Home() {
             <Card key={site.domain} withBorder padding="lg" radius="md">
               <Group justify="space-between" mb="xs">
                 <Anchor
-                  component={Link}
                   href={`/sites/${encodeURIComponent(site.domain)}`}
+                  component={Link}
                   fw={500}
                   size="lg"
                   style={{ color: 'inherit' }}
@@ -146,24 +157,30 @@ export default async function Home() {
               </Stack>
 
               <Group mt="md" gap="xs">
-                <Button
-                  component={Link}
+                <Link
                   href={`/sites/${encodeURIComponent(site.domain)}`}
-                  size="xs"
-                  variant="light"
+                  passHref
+                  legacyBehavior
                 >
-                  View Details
-                </Button>
-                {site.status === 'indexed' && (
-                  <Button
-                    component={Link}
-                    href={`/sites/${encodeURIComponent(site.domain)}/rediscover`}
-                    size="xs"
-                    variant="outline"
-                    leftSection={<IconRefresh size={14} />}
-                  >
-                    Re-index
+                  <Button component="a" size="xs" variant="light">
+                    View Details
                   </Button>
+                </Link>
+                {site.status === 'indexed' && (
+                  <Link
+                    href={`/sites/${encodeURIComponent(site.domain)}/rediscover`}
+                    passHref
+                    legacyBehavior
+                  >
+                    <Button
+                      component="a"
+                      size="xs"
+                      variant="outline"
+                      leftSection={<IconRefresh size={14} />}
+                    >
+                      Re-index
+                    </Button>
+                  </Link>
                 )}
                 <DeleteSiteButton domain={site.domain} />
               </Group>

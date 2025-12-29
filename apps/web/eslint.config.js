@@ -36,6 +36,10 @@ export default [
         confirm: 'readonly',
         window: 'readonly',
         document: 'readonly',
+        HTMLDivElement: 'readonly',
+        HTMLTextAreaElement: 'readonly',
+        TextDecoder: 'readonly',
+        NodeJS: 'readonly',
       },
     },
     plugins: {

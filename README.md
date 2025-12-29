@@ -304,16 +304,19 @@ The site status changes: `discovered` → `indexing` → `indexed`
 
 ### Using the MCP Server with Cursor
 
-The MCP server allows Cursor (and other MCP-compatible agents) to search your indexed documentation.
+The MCP server allows Cursor (and other MCP-compatible agents) to search your indexed documentation. It can run in two modes:
 
-#### Configuration
+1. **Local Mode (stdio)** - Runs locally via command line (recommended for development)
+2. **Hosted Mode (HTTP)** - Runs as an API endpoint on Vercel (recommended for production/shared use)
+
+#### Local MCP Server Configuration
 
 Add to your Cursor settings (`.cursor/mcp.json` or via Settings):
 
 ```json
 {
   "mcpServers": {
-    "docs-hound": {
+    "docs-hound-local": {
       "command": "npx",
       "args": ["tsx", "/absolute/path/to/docs-hound/mcp-server/src/index.ts"],
       "cwd": "/absolute/path/to/docs-hound",
@@ -336,13 +339,47 @@ Add to your Cursor settings (`.cursor/mcp.json` or via Settings):
 > - For local development, you can use `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` instead of the `KV_*` names (code supports both)
 > - The MCP server automatically sets `MCP_MODE=true` to suppress info logs
 
+#### Hosted MCP Server Configuration
+
+If you've deployed to Vercel, you can use the hosted MCP endpoint instead:
+
+1. **Generate an API key:**
+
+```bash
+openssl rand -base64 32
+```
+
+2. **Add to Vercel:**
+   - Go to Settings → Environment Variables
+   - Add `MCP_API_KEY` with your generated key
+   - Redeploy
+
+3. **Configure in Cursor:**
+
+```json
+{
+  "mcpServers": {
+    "docs-hound-hosted": {
+      "url": "https://your-app.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer your-mcp-api-key-here"
+      }
+    }
+  }
+}
+```
+
+**You can configure both local and hosted servers simultaneously.** See [docs/HOSTED_MCP_SERVER.md](docs/HOSTED_MCP_SERVER.md) for detailed setup instructions.
+
 #### Available MCP Tools
 
-| Tool              | Description                          | Parameters                                                             |
-| ----------------- | ------------------------------------ | ---------------------------------------------------------------------- |
-| `search_docs`     | Semantic search across documentation | `query` (string), `source` (optional string), `topK` (optional number) |
-| `list_sources`    | List all indexed documentation sites | None                                                                   |
-| `get_source_info` | Get details about a specific source  | `domain` (string)                                                      |
+Both local and hosted MCP servers provide the same tools:
+
+| Tool              | Description                          | Parameters                                                              |
+| ----------------- | ------------------------------------ | ----------------------------------------------------------------------- |
+| `search_docs`     | Semantic search across documentation | `query` (string), `source` (optional string), `limit` (optional number) |
+| `list_sources`    | List all indexed documentation sites | None                                                                    |
+| `get_source_info` | Get details about a specific source  | `domain` (string)                                                       |
 
 #### Example Usage in Cursor
 
@@ -387,6 +424,14 @@ POST   /api/chat               # Streaming chat
          messages: Array<{role: 'user'|'assistant', content: string}>,
          selectedDomain?: string
        }
+```
+
+#### MCP API
+
+```
+POST   /api/mcp                # Hosted MCP server endpoint
+       Headers: Authorization: Bearer <MCP_API_KEY>
+       Body: JSON-RPC message (standard MCP protocol)
 ```
 
 ### Package APIs
@@ -574,9 +619,19 @@ The build process runs server components which need environment variables. Solut
 
 #### MCP server not connecting
 
-- Verify the path to `mcp-server/src/index.ts` is correct
+**For Local MCP Server:**
+
+- Verify the path to `mcp-server/src/index.ts` is correct and uses absolute paths
 - Check that all environment variables are set in the MCP config
 - Look at Cursor's MCP logs for error messages
+- Restart Cursor after updating the config
+
+**For Hosted MCP Server:**
+
+- Verify `MCP_API_KEY` is set in Vercel and matches your Cursor config
+- Check the URL is correct and includes `/api/mcp`
+- Ensure you redeployed after adding the environment variable
+- Check Vercel function logs for errors
 
 ### Debug Mode
 

@@ -16,6 +16,7 @@
   "dependencies": {
     "@docs-hound/agent-chat": "workspace:*",
     "@docs-hound/doc-scraper": "workspace:*",
+    "@docs-hound/mcp-server": "workspace:*",
     "@docs-hound/shared-db": "workspace:*",
     "@docs-hound/tool-docs-search": "workspace:*",
     "react-markdown": "^10.1.0",

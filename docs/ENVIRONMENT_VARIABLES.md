@@ -97,7 +97,7 @@ const token = process.env.UPSTASH_VECTOR_REST_TOKEN
 | QStash URL          | `QSTASH_URL`                                            | QStash API endpoint            | Automatically provided by integration  |
 | QStash Signing Keys | `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` | Webhook signature verification | Automatically provided by integration  |
 | Cron Secret         | `CRON_SECRET`                                           | Secure cron endpoints          | If you add scheduled tasks             |
-| MCP API Key         | `MCP_API_KEY`                                           | Secure MCP API access          | Future feature, currently unused       |
+| MCP API Key         | `MCP_API_KEY`                                           | Secure hosted MCP server       | When using remote MCP server endpoint  |
 
 ### Auto-Provided Variables (Vercel Only)
 
@@ -199,16 +199,23 @@ VERCEL_OIDC_TOKEN=...
 
 ### For MCP Server
 
-The MCP server needs environment variables set in your Cursor config (`.cursor/mcp.json`).
+The MCP server can run in two modes: **local** (stdio) or **hosted** (HTTP).
+
+#### Local MCP Server (stdio)
+
+For local development, set environment variables in your Cursor config (`~/.cursor/mcp.json`).
 
 **Use the variable names that match your setup:**
 
-#### If Using Vercel (copy from Vercel Environment Variables):
+**If Using Vercel credentials (copy from Vercel Environment Variables):**
 
 ```json
 {
   "mcpServers": {
-    "docs-hound": {
+    "docs-hound-local": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/docs-hound/mcp-server/src/index.ts"],
+      "cwd": "/absolute/path/to/docs-hound",
       "env": {
         "OPENAI_API_KEY": "sk-...",
         "KV_REST_API_URL": "https://...",
@@ -221,12 +228,15 @@ The MCP server needs environment variables set in your Cursor config (`.cursor/m
 }
 ```
 
-#### If Using Local Upstash:
+**If Using Local Upstash:**
 
 ```json
 {
   "mcpServers": {
-    "docs-hound": {
+    "docs-hound-local": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/docs-hound/mcp-server/src/index.ts"],
+      "cwd": "/absolute/path/to/docs-hound",
       "env": {
         "OPENAI_API_KEY": "sk-...",
         "UPSTASH_REDIS_REST_URL": "https://...",
@@ -238,6 +248,30 @@ The MCP server needs environment variables set in your Cursor config (`.cursor/m
   }
 }
 ```
+
+#### Hosted MCP Server (HTTP)
+
+For remote access, configure the HTTP endpoint in Cursor:
+
+```json
+{
+  "mcpServers": {
+    "docs-hound-hosted": {
+      "url": "https://your-app.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer your-mcp-api-key-here"
+      }
+    }
+  }
+}
+```
+
+**Required Vercel environment variable:**
+
+- `MCP_API_KEY` - Set this in Vercel dashboard (Settings → Environment Variables)
+- Use the same value in the `Authorization` header above
+
+**You can have both local and hosted servers configured simultaneously.**
 
 ## Troubleshooting
 

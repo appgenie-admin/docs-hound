@@ -123,6 +123,9 @@ importers:
       '@docs-hound/doc-scraper':
         specifier: workspace:*
         version: link:../../packages/doc-scraper
+      '@docs-hound/mcp-server':
+        specifier: workspace:*
+        version: link:../../mcp-server
       '@docs-hound/shared-db':
         specifier: workspace:*
         version: link:../../packages/shared/db

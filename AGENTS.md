@@ -99,6 +99,7 @@ const response = await runChatAgent({ messages, source? })
 - `POST /api/discover` - Start discovery (body: `{domain}`)
 - `POST /api/index` - Start indexing (body: `{domain}`)
 - `POST /api/chat` - Streaming chat (body: `{messages, selectedDomain?}`)
+- `POST /api/mcp` - Hosted MCP server endpoint (requires `Authorization: Bearer <MCP_API_KEY>`)
 
 ## Environment Variables
 
@@ -112,6 +113,14 @@ UPSTASH_VECTOR_REST_TOKEN=...
 KV_REST_API_URL=https://...  # or UPSTASH_REDIS_REST_URL
 KV_REST_API_TOKEN=...        # or UPSTASH_REDIS_REST_TOKEN
 ```
+
+Optional (for hosted MCP server):
+
+```bash
+MCP_API_KEY=...  # Set in Vercel for hosted MCP endpoint authentication
+```
+
+See `docs/ENVIRONMENT_VARIABLES.md` for full details.
 
 ## Common Tasks
 
@@ -195,18 +204,25 @@ This prevents the same URL from being queued multiple times when found on differ
 
 ## MCP Server
 
-Located in `mcp-server/src/index.ts`, provides:
+The MCP server provides tools for AI agents (like Cursor) to search documentation. It can run in two modes:
+
+1. **Local Mode (stdio)**: Runs locally via command line
+2. **Hosted Mode (HTTP)**: Runs as an API endpoint on Vercel
+
+### Available Tools
 
 - `search_docs(query, source?, limit?)` - Semantic search
 - `list_sources()` - List indexed sites
 - `get_source_info(domain)` - Site details
+
+### Local MCP Server Setup
 
 Configure in Cursor (`~/.cursor/mcp.json`):
 
 ```json
 {
   "mcpServers": {
-    "docs-hound": {
+    "docs-hound-local": {
       "command": "npx",
       "args": ["tsx", "/absolute/path/to/docs-hound/mcp-server/src/index.ts"],
       "cwd": "/absolute/path/to/docs-hound",
@@ -223,6 +239,62 @@ Configure in Cursor (`~/.cursor/mcp.json`):
 ```
 
 **Important**: Use absolute paths for both `cwd` and in the `args` array. The MCP server automatically sets `MCP_MODE=true` to suppress info logs from stdout.
+
+### Hosted MCP Server Setup
+
+The hosted MCP server runs as an API endpoint at `/api/mcp` and uses simple Bearer token authentication.
+
+**1. Set `MCP_API_KEY` in Vercel:**
+
+- Go to Vercel Dashboard → Settings → Environment Variables
+- Add `MCP_API_KEY` with a secure random value (e.g., generated via `openssl rand -base64 32`)
+- Redeploy your application
+
+**2. Configure in Cursor (`~/.cursor/mcp.json`):**
+
+```json
+{
+  "mcpServers": {
+    "docs-hound-hosted": {
+      "url": "https://your-app.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer your-mcp-api-key-here"
+      }
+    }
+  }
+}
+```
+
+**3. You can have both local and hosted servers configured:**
+
+```json
+{
+  "mcpServers": {
+    "docs-hound-local": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/docs-hound/mcp-server/src/index.ts"],
+      "cwd": "/absolute/path/to/docs-hound",
+      "env": { ... }
+    },
+    "docs-hound-hosted": {
+      "url": "https://your-app.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer your-mcp-api-key-here"
+      }
+    }
+  }
+}
+```
+
+### Implementation Details
+
+The MCP server is split into reusable components:
+
+- `mcp-server/src/mcp-handler.ts` - Core MCP server logic (shared)
+- `mcp-server/src/index.ts` - Local stdio transport
+- `apps/web/src/app/api/mcp/route.ts` - Hosted HTTP endpoint
+
+The hosted endpoint accepts JSON-RPC messages via POST and returns JSON-RPC responses.
 
 ## Known Issues
 

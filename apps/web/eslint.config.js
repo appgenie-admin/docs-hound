@@ -32,6 +32,7 @@ export default [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         alert: 'readonly',
         confirm: 'readonly',
         window: 'readonly',

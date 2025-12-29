@@ -1,0 +1,18 @@
+{
+  "name": "@docs-hound/agent-chat",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@docs-hound/tool-docs-search": "workspace:*"
+  }
+}

@@ -184,10 +184,10 @@ Standard MCP JSON-RPC format:
 
 ## Implementation
 
-The hosted MCP server implementation consists of:
+The hosted MCP server implementation is a simple HTTP JSON-RPC handler:
 
-- **Core logic**: `mcp-server/src/mcp-handler.ts` - Shared MCP server logic
-- **HTTP endpoint**: `apps/web/src/app/api/mcp/route.ts` - Next.js API route
-- **Local server**: `mcp-server/src/index.ts` - Stdio transport for local use
+- **HTTP endpoint**: `apps/web/src/app/api/mcp/route.ts` - Direct JSON-RPC handler
+- **No server instance**: Handles JSON-RPC messages directly without the MCP SDK server wrapper
+- **Stateless**: Each request is independent, no persistent connections
 
-Both local and hosted modes use the same core MCP handler, ensuring consistent behavior.
+The hosted mode directly implements the MCP JSON-RPC protocol, making it more suitable for serverless deployments.

@@ -294,13 +294,13 @@ The hosted MCP server runs as an API endpoint at `/api/mcp` and uses simple Bear
 
 ### Implementation Details
 
-The MCP server is split into reusable components:
+The MCP server is split into two independent implementations:
 
-- `mcp-server/src/mcp-handler.ts` - Core MCP server logic (shared)
+- `mcp-server/src/mcp-handler.ts` - Core MCP server logic (for local stdio mode)
 - `mcp-server/src/index.ts` - Local stdio transport
-- `apps/web/src/app/api/mcp/route.ts` - Hosted HTTP endpoint
+- `apps/web/src/app/api/mcp/route.ts` - Hosted HTTP endpoint (direct JSON-RPC handler)
 
-The hosted endpoint accepts JSON-RPC messages via POST and returns JSON-RPC responses.
+The hosted endpoint implements the MCP JSON-RPC protocol directly without using the SDK server wrapper, making it more suitable for serverless deployments where creating persistent server instances isn't ideal.
 
 ## Known Issues
 

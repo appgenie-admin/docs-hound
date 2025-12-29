@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  createMCPServer,
-  type JSONRPCMessage,
-} from '@docs-hound/mcp-server/src/mcp-handler'
+import { searchDocs } from '@docs-hound/tool-docs-search'
+import { getSiteRegistry } from '@docs-hound/shared-db'
+
+interface JSONRPCRequest {
+  jsonrpc: '2.0'
+  id?: string | number | null
+  method: string
+  params?: Record<string, unknown>
+}
+
+interface JSONRPCResponse {
+  jsonrpc: '2.0'
+  id?: string | number | null
+  result?: unknown
+  error?: {
+    code: number
+    message: string
+    data?: unknown
+  }
+}
 
 /**
  * Hosted MCP Server endpoint
@@ -36,39 +52,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse the JSON-RPC message
-    const message = (await request.json()) as JSONRPCMessage
+    const message = (await request.json()) as JSONRPCRequest
 
-    // Create a server instance for this request
-    const server = createMCPServer()
+    console.log('[MCP API] Received request:', message.method)
 
-    // Handle the message and get response
-    const response = await new Promise<JSONRPCMessage>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Request timeout'))
-      }, 30000) // 30 second timeout
-
-      // Create a minimal transport-like interface
-      const transport = {
-        start: async () => Promise.resolve(),
-        send: async (msg: JSONRPCMessage) => {
-          clearTimeout(timeout)
-          resolve(msg)
-          return Promise.resolve()
-        },
-        close: async () => Promise.resolve(),
-      }
-
-      // Connect the server and handle the message
-      server
-        .connect(transport)
-        .then(() => {
-          // Access the internal message handler
-          // The server needs to receive the message to process it
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ;(server as any)._messageHandler?.(message)
-        })
-        .catch(reject)
-    })
+    // Handle the message based on method
+    const response = await handleMCPRequest(message)
 
     return NextResponse.json(response)
   } catch (error) {
@@ -87,6 +76,349 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * Handle MCP JSON-RPC requests
+ */
+async function handleMCPRequest(
+  request: JSONRPCRequest
+): Promise<JSONRPCResponse> {
+  const { method, params, id } = request
+
+  try {
+    switch (method) {
+      case 'initialize': {
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: {
+            protocolVersion: '2024-11-05',
+            capabilities: {
+              tools: {},
+              resources: {},
+            },
+            serverInfo: {
+              name: 'docs-hound',
+              version: '1.0.0',
+            },
+          },
+        }
+      }
+
+      case 'tools/list': {
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: {
+            tools: [
+              {
+                name: 'search_docs',
+                description: `Search indexed documentation using semantic search.
+Returns relevant documentation excerpts with URLs and source sites.
+Can search across all sources or filter by a specific domain.`,
+                inputSchema: {
+                  type: 'object' as const,
+                  properties: {
+                    query: {
+                      type: 'string',
+                      description: 'Natural language search query',
+                    },
+                    source: {
+                      type: 'string',
+                      description:
+                        'Optional: Domain to search within (e.g., "docs.example.com")',
+                    },
+                    limit: {
+                      type: 'number',
+                      description: 'Number of results to return (default: 5)',
+                      default: 5,
+                    },
+                  },
+                  required: ['query'],
+                },
+              },
+              {
+                name: 'list_sources',
+                description: 'List all indexed documentation sources (domains)',
+                inputSchema: {
+                  type: 'object' as const,
+                  properties: {},
+                  required: [],
+                },
+              },
+              {
+                name: 'get_source_info',
+                description: 'Get detailed information about a specific source',
+                inputSchema: {
+                  type: 'object' as const,
+                  properties: {
+                    domain: {
+                      type: 'string',
+                      description: 'Domain of the documentation source',
+                    },
+                  },
+                  required: ['domain'],
+                },
+              },
+            ],
+          },
+        }
+      }
+
+      case 'tools/call': {
+        const toolName = (params as { name: string })?.name
+        const args =
+          (params as { arguments?: Record<string, unknown> })?.arguments || {}
+
+        const result = await handleToolCall(toolName, args)
+        return {
+          jsonrpc: '2.0',
+          id,
+          result,
+        }
+      }
+
+      case 'resources/list': {
+        const registry = getSiteRegistry()
+        const sites = await registry.listSites()
+
+        return {
+          jsonrpc: '2.0',
+          id,
+          result: {
+            resources: [
+              {
+                uri: 'docs://sources',
+                name: 'All Documentation Sources',
+                description: 'List of all indexed documentation sites',
+                mimeType: 'application/json',
+              },
+              ...sites.map((site) => ({
+                uri: `docs://sources/${site.domain}`,
+                name: site.name,
+                description:
+                  site.description || `Documentation from ${site.domain}`,
+                mimeType: 'application/json',
+              })),
+            ],
+          },
+        }
+      }
+
+      case 'resources/read': {
+        const uri = (params as { uri: string })?.uri
+
+        if (uri === 'docs://sources') {
+          const registry = getSiteRegistry()
+          const sites = await registry.listSites()
+
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: {
+              contents: [
+                {
+                  uri,
+                  mimeType: 'application/json',
+                  text: JSON.stringify(
+                    sites.map((s) => ({
+                      domain: s.domain,
+                      name: s.name,
+                      description: s.description,
+                      status: s.status,
+                      pageCount: s.pageCount,
+                      lastIndexedAt: s.lastIndexedAt,
+                    })),
+                    null,
+                    2
+                  ),
+                },
+              ],
+            },
+          }
+        }
+
+        if (uri.startsWith('docs://sources/')) {
+          const domain = uri.replace('docs://sources/', '')
+          const registry = getSiteRegistry()
+          const site = await registry.getSite(domain)
+
+          if (!site) {
+            throw new Error(`Source not found: ${domain}`)
+          }
+
+          const pages = await registry.getIndexedPages(domain)
+
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: {
+              contents: [
+                {
+                  uri,
+                  mimeType: 'application/json',
+                  text: JSON.stringify(
+                    {
+                      domain,
+                      ...site,
+                      pages,
+                    },
+                    null,
+                    2
+                  ),
+                },
+              ],
+            },
+          }
+        }
+
+        throw new Error(`Unknown resource: ${uri}`)
+      }
+
+      default: {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32601,
+            message: `Method not found: ${method}`,
+          },
+        }
+      }
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return {
+      jsonrpc: '2.0',
+      id,
+      error: {
+        code: -32603,
+        message: errorMessage,
+      },
+    }
+  }
+}
+
+/**
+ * Handle tool calls
+ */
+async function handleToolCall(name: string, args: Record<string, unknown>) {
+  switch (name) {
+    case 'search_docs': {
+      const query = args.query as string
+      const source = args.source as string | undefined
+      const limit = (args.limit as number) || 5
+
+      const results = await searchDocs(query, source, limit)
+
+      if (results.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'No relevant documentation found for your query.',
+            },
+          ],
+        }
+      }
+
+      const formattedResults = results.map((result, index) => {
+        const excerpt =
+          result.content.content.length > 500
+            ? result.content.content.substring(0, 500) + '...'
+            : result.content.content
+
+        return `${index + 1}. **${result.content.title}**
+   Source: ${result.content.source}
+   URL: ${result.content.url}
+   Score: ${result.score.toFixed(3)}
+
+   ${excerpt}`
+      })
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Found ${results.length} relevant documentation pages:\n\n${formattedResults.join('\n\n---\n\n')}`,
+          },
+        ],
+      }
+    }
+
+    case 'list_sources': {
+      const registry = getSiteRegistry()
+      const sites = await registry.listSites()
+
+      if (sites.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'No documentation sources indexed yet.',
+            },
+          ],
+        }
+      }
+
+      const sourceList = sites
+        .filter((s) => s.status === 'indexed')
+        .map(
+          (site) =>
+            `- **${site.name}** (${site.domain})
+  Pages: ${site.pageCount}
+  Last indexed: ${site.lastIndexedAt ? new Date(site.lastIndexedAt).toLocaleDateString() : 'Never'}
+  ${site.description || ''}`
+        )
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Indexed documentation sources:\n\n${sourceList.join('\n\n')}`,
+          },
+        ],
+      }
+    }
+
+    case 'get_source_info': {
+      const domain = args.domain as string
+      const registry = getSiteRegistry()
+      const site = await registry.getSite(domain)
+
+      if (!site) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `No documentation source found for domain: ${domain}`,
+            },
+          ],
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `**${site.name}** (${domain})
+
+Status: ${site.status}
+Base URL: ${site.baseUrl}
+Description: ${site.description || 'None'}
+Pages indexed: ${site.pageCount}
+Last indexed: ${site.lastIndexedAt ? new Date(site.lastIndexedAt).toLocaleString() : 'Never'}
+Last discovered: ${site.lastDiscoveredAt ? new Date(site.lastDiscoveredAt).toLocaleString() : 'Never'}
+Created: ${new Date(site.createdAt).toLocaleString()}`,
+          },
+        ],
+      }
+    }
+
+    default:
+      throw new Error(`Unknown tool: ${name}`)
   }
 }
 

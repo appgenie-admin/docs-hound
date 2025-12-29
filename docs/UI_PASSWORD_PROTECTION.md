@@ -56,7 +56,7 @@ A logout button appears in the header when password protection is enabled. Click
 
 ## How It Works
 
-### Middleware (`src/middleware.ts`)
+### Proxy/Middleware (`src/proxy.ts`)
 
 - Runs on every request
 - Checks if `UI_PASSWORD` is configured
@@ -67,6 +67,8 @@ A logout button appears in the header when password protection is enabled. Click
   - `/login` page
   - `/api/auth` endpoint (login/logout)
   - `/api/mcp` endpoint (has its own auth)
+
+**Note:** In Next.js 16, this file is called `proxy.ts` (previously `middleware.ts`).
 
 ### Authentication API (`src/app/api/auth/route.ts`)
 
@@ -170,8 +172,8 @@ The application will work normally without any authentication.
 
 ## Implementation Files
 
-- `/apps/web/src/middleware.ts` - Request interception
+- `/apps/web/src/proxy.ts` - Request interception (middleware)
 - `/apps/web/src/app/api/auth/route.ts` - Login/logout API
-- `/apps/web/src/app/login/page.tsx` - Login form
+- `/apps/web/src/app/login/page.tsx` - Login form (with Suspense boundary)
 - `/apps/web/src/components/LogoutButton.tsx` - Logout button component
 - `/apps/web/src/app/page.tsx` - Updated to show logout button

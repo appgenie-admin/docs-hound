@@ -39,6 +39,7 @@ export default [
         document: 'readonly',
         HTMLDivElement: 'readonly',
         HTMLTextAreaElement: 'readonly',
+        HTMLInputElement: 'readonly',
         TextDecoder: 'readonly',
         NodeJS: 'readonly',
       },

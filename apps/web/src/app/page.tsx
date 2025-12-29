@@ -13,6 +13,7 @@ import {
 import { IconPlus, IconRefresh, IconWorld } from '@tabler/icons-react'
 import { getSiteRegistry, type Site } from '@docs-hound/shared-db'
 import { DeleteSiteButton } from '@/components/DeleteSiteButton'
+import { LogoutButton } from '@/components/LogoutButton'
 
 // Force dynamic rendering since we need runtime env vars
 export const dynamic = 'force-dynamic'
@@ -57,6 +58,9 @@ function formatDate(date: string | null): string {
 export default async function Home() {
   const sites = await getSites()
 
+  // Check if password protection is enabled
+  const isPasswordProtected = !!process.env.UI_PASSWORD
+
   // Sort sites by name alphabetically (LATCH: Alphabet)
   const sortedSites = [...sites].sort((a, b) => a.name.localeCompare(b.name))
 
@@ -83,6 +87,7 @@ export default async function Home() {
           >
             Add Site
           </Button>
+          {isPasswordProtected && <LogoutButton />}
         </Group>
       </Group>
       {sites.length === 0 ? (

@@ -120,6 +120,12 @@ Optional (for hosted MCP server):
 MCP_API_KEY=...  # Set in Vercel for hosted MCP endpoint authentication
 ```
 
+Optional (for UI password protection):
+
+```bash
+UI_PASSWORD=...  # Set to protect the web UI with a password
+```
+
 See `docs/ENVIRONMENT_VARIABLES.md` for full details.
 
 ## Common Tasks

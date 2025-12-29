@@ -97,6 +97,7 @@ const token = process.env.UPSTASH_VECTOR_REST_TOKEN
 | QStash URL          | `QSTASH_URL`                                            | QStash API endpoint            | Automatically provided by integration  |
 | QStash Signing Keys | `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` | Webhook signature verification | Automatically provided by integration  |
 | Cron Secret         | `CRON_SECRET`                                           | Secure cron endpoints          | If you add scheduled tasks             |
+| UI Password         | `UI_PASSWORD`                                           | Simple password protection     | When you want to protect the UI        |
 | MCP API Key         | `MCP_API_KEY`                                           | Secure hosted MCP server       | When using remote MCP server endpoint  |
 
 ### Auto-Provided Variables (Vercel Only)
@@ -272,6 +273,29 @@ For remote access, configure the HTTP endpoint in Cursor:
 - Use the same value in the `Authorization` header above
 
 **You can have both local and hosted servers configured simultaneously.**
+
+### UI Password Protection
+
+To add simple password protection to the web UI, set the `UI_PASSWORD` environment variable:
+
+```bash
+UI_PASSWORD=your-secure-password
+```
+
+**How it works:**
+
+- If `UI_PASSWORD` is not set, the UI is publicly accessible
+- If set, users must enter the password to access any page
+- Authentication persists for 30 days via HTTP-only cookie
+- Users can logout via the logout button in the header
+- The MCP API endpoint (`/api/mcp`) is not affected by this protection
+
+**Setting the password:**
+
+1. **Local development:** Add to `apps/web/.env.local`
+2. **Vercel deployment:** Add via Settings → Environment Variables → Add `UI_PASSWORD`
+
+**Note:** This is "faux security" - a simple password check suitable for personal use. It's not OAuth, not multi-user, and not designed for production security requirements. It simply prevents casual access to your deployed instance.
 
 ## Troubleshooting
 
